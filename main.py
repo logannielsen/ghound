@@ -47,7 +47,6 @@ if __name__ == "__main__":
                                 print(hound.name, hound.id)
                             with open(f"{hound.csv_path()}.csv", "r", encoding='utf-8') as f:
                                 form = GreyhoundForm(f)
-                                print(form.race())
                                 for race in form.race():
                                     if race['Pl'].isdigit():
                                         print(race['Pl'])
@@ -59,48 +58,40 @@ if __name__ == "__main__":
                                             new_track = TrackTable(track_name=race['Trk'])
                                             sess.add(new_track)
                                             sess.flush()
-                                            sess.commit()
-                                        if q2.id:
-                                            print(q2)
-                                            q3 = sess.query(RaceTable).filter(RaceTable.id==q2.id).\
+                                        xy = sess.query(TrackTable).filter(TrackTable.track_name==race['Trk'].strip()).one_or_none()
+                                        if xy.id:
+                                            print(f'here {xy.id}')
+                                            q3 = sess.query(RaceTable, TrackTable).filter(TrackTable.id==xy.id).\
                                                                             filter(RaceTable.date==datetime.strptime(race['Date'], '%d/%m/%Y')).\
-                                                                            filter(RaceStatsTable.race_number == int(search(r'\d+', race['Race']).group(0))).one_or_none()
-                                            print(q2.id)
+                                                                            filter(RaceTable.race_number == int(search(r'\d+', race['Race']).group(0))).one_or_none()
                                             if not q3:
-                                                new_race = RaceTable(track_id=q2.id, date=datetime.strptime(race['Date'], '%d/%m/%Y'), race_number=int(search(r'\d+', race['Race']).group(0)))
+                                                print(f'here now {xy.id}')
+                                                new_race = RaceTable(track_id=xy.id, date=datetime.strptime(race['Date'], '%d/%m/%Y'), race_number=int(search(r'\d+', race['Race']).group(0)))
                                                 sess.add(new_race)
                                                 sess.flush()
-            sess.commit()
-                                    # q2 = sess.query(RaceStatsTable, GreyhoundTable).filter(RaceStatsTable.track==race['Trk'].strip()).\
-                                    #                                         filter(RaceStatsTable.date==datetime.strptime(race['Date'], '%d/%m/%Y')).\
-                                    #                                         filter(RaceStatsTable.race_number == int(search(r'\d+', race['Race']).group(0))).\
-                                    #                                         filter(GreyhoundTable.id==hound.id).one_or_none()
-                                    # print(q2)
-    #                                 print(bool(q2))
-    #                                 print(race)
-    #                                 if not q2:
-    #                                     race_stats = RaceStatsTable(greyhound_id=hound.id,
-    #                                                             track=race['Trk'].strip(),
-    #                                                             race_number = int(search(r'\d+', race['Race']).group(0)),
-    #                                                             date = datetime.strptime(race['Date'], '%d/%m/%Y'),
-    #                                                             distance = int(race['Dist']),
-    #                                                             weight = race['Wght'],
-    #                                                             time = race['Time'],
-    #                                                             bon = race['BON'],
-    #                                                             margin = race['Mgin'],
-    #                                                             split_1 = race['Split1'],
-    #                                                             pir = race['PIR'],
-    #                                                             Comment = race['Comment'],
-    #                                                             grade = race['Grade'],
-    #                                                             sp = race['S/P'],
-    #                                                             hcap = race['Hcap']
-    #                                 )
-    #                                     sess.add(race_stats)
-    #                                     sess.flush()
-    #         sess.commit()
-    # # for dog, race in sess.query(GreyhoundTable, RaceStatsTable).filter(GreyhoundTable.name=='RED QUEEN'):
-    # #     print(dog.name, dog.id, race.track, race.id, race.date, race.time, race.date)
-    # #     print('done')
+                                                sess.commit()
+                                                print(xy.id)
+                                                gq = sess.query(RaceTable).filter(RaceTable.track_id==xy.id).\
+                                                                            filter(RaceTable.date==datetime.strptime(race['Date'], '%d/%m/%Y')).\
+                                                                            filter(RaceTable.race_number == int(search(r'\d+', race['Race']).group(0))).one_or_none()
+                                                print(gq)
+                                                race_stats = RaceStatsTable(greyhound_id=hound.id,
+                                                                race = gq.id,
+                                                                distance = int(race['Dist']),
+                                                                weight = race['Wght'],
+                                                                time = race['Time'],
+                                                                bon = race['BON'],
+                                                                margin = race['Mgin'],
+                                                                split_1 = race['Split1'],
+                                                                pir = race['PIR'],
+                                                                Comment = race['Comment'],
+                                                                grade = race['Grade'],
+                                                                sp = race['S/P'],
+                                                                hcap = race['Hcap']
+                                    )
+                                                sess.add(race_stats)
+                                                sess.flush()
+                                                sess.commit()
     
                             
                             

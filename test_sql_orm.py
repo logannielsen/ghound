@@ -14,13 +14,13 @@ from sqlalchemy.orm import sessionmaker, joinedload
 
 
 def test():
-    for a in sess.query(TrackTable).all():
-        print(a.track_name, a.id)
+    for a in sess.query(GreyhoundTable).filter(TrackTable.id==6).all():
+        print(a.id, a.name)
         print('done')
     
 def test_a():
-    for race in sess.query(TrackTable).filter(TrackTable.track_name=='SLE'):
-        print(race.id, race.track_name)
+    for dog, track in sess.query(GreyhoundTable, TrackTable).join(RaceStatsTable).join(RaceTable).join(TrackTable).filter(TrackTable.id=='9').all():
+        print(dog.id, dog.name, track.track_name)
         print('done')
 
-test()
+test_a()

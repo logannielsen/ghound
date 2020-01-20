@@ -1,7 +1,7 @@
 import sqlalchemy
 
 
-from sqlalchemy import create_engine, ForeignKey, Table
+from sqlalchemy import create_engine, ForeignKey, Table, UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship 
 from sqlalchemy import Column, Integer, String, DateTime
@@ -12,10 +12,10 @@ Session = sessionmaker()
 Session.configure(bind=engine)
 sess = Session()
 
-race_greyhound_association_table = Table('race_greyhound_association', Base.metadata,
-    Column('greyhound', Integer, ForeignKey('greyhound.id')),
-    Column('race', Integer, ForeignKey('race.id'))
-)
+# race_greyhound_association_table = Table('race_greyhound_association', Base.metadata,
+#     Column('greyhound', Integer, ForeignKey('greyhound.id')),
+#     Column('race', Integer, ForeignKey('race.id'))
+# )
 
 class GreyhoundTable(Base):
     #future features
@@ -37,8 +37,6 @@ class GreyhoundTable(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String)
-    races = relationship("RaceTable", secondary=race_greyhound_association_table,
-                                back_populates="greyhounds")
     race_stats = relationship("RaceStatsTable")
 
     def __repr__(self):
@@ -49,8 +47,8 @@ class GreyhoundTable(Base):
 class TrackTable(Base):
     __tablename__ = 'track'
 
-    id = Column(Integer, primary_key=True)
-    track_name = Column(String, ForeignKey('racehound_stats.track'), nullable=False)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    track_name = Column(String, nullable=False)
     race = relationship("RaceTable", uselist=False, back_populates="track")
 
     def __repr__(self):
@@ -61,23 +59,22 @@ class TrackTable(Base):
 class RaceTable(Base):
     __tablename__ = 'race'
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True, unique=True)
     track_id = Column(Integer, ForeignKey('track.id'), nullable = False)
-    date = Column(DateTime, ForeignKey('racehound_stats.date'), nullable=False)
-    race_number = Column(Integer, ForeignKey('racehound_stats.race_number'), nullable = False)
-    greyhounds = relationship("GreyhoundTable", secondary=race_greyhound_association_table,
-                                back_populates="races")
+    date = Column(DateTime, nullable=False)
+    race_number = Column(Integer, nullable = False)
+    race_stats = relationship("RaceStatsTable")
     track = relationship("TrackTable", back_populates="race")
+
+    UniqueConstraint('track_id', 'date', 'race_number')
 
 
 class RaceStatsTable(Base):
     __tablename__ = 'racehound_stats'
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, unique=True)
     greyhound_id = Column(Integer, ForeignKey('greyhound.id'))
-    race_number = Column(Integer)
-    date = Column(DateTime)
-    track = Column(String)
+    race = Column(Integer, ForeignKey('race.id'))
     distance = Column(Integer)
     weight = Column(Integer)
     time = Column(Integer)
@@ -90,3 +87,6 @@ class RaceStatsTable(Base):
     sp = Column(Integer)
     hcap = Column(Integer)
 
+    UniqueConstraint('greyhound_id', 'race')
+
+# Base.metadata.create_all(engine)
