@@ -3,10 +3,10 @@ import sqlalchemy
 
 from sqlalchemy import create_engine, ForeignKey, Table, UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship 
+from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy import Column, Integer, String, DateTime
 
-engine = create_engine('sqlite:///:here:', echo=True)
+engine = create_engine('sqlite:///new.db', echo=False)
 Base = declarative_base()
 Session = sessionmaker()
 Session.configure(bind=engine)
